@@ -17,7 +17,7 @@
         All
     </x-dropdown-item>
 
-    @foreach($categories as $category) 
+    @foreach($categories as $category)
         <x-dropdown-item 
             {{--href="/?category={{ $category->slug }}&{{ http_build_query(request()->except('category', 'page')) }}" --}}
             href="{{ request()->fullUrlWithQuery(['category'=>$category->slug]) }}"
