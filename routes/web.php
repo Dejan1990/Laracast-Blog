@@ -6,6 +6,22 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SessionsController;
 use App\Http\Controllers\PostCommentsController;
 
+Route::get('ping', function () {
+    $mailchimp = new \MailchimpMarketing\ApiClient();
+
+    $mailchimp->setConfig([
+	    'apiKey' => config('services.mailchimp.key'),
+	    'server' => 'us20'
+    ]);
+
+    $response = $mailchimp->lists->addListMember('1593728dbe', [
+        'email_address' => 'dejan.simo90@gmail.com',
+        'status' => 'subscribed'
+    ]);
+    //print_r($response);
+    ddd($response);
+});
+
 Route::get('/', [PostController::class, 'index'])->name('home');
 Route::get('posts/{post:slug}', [PostController::class, 'show']);
 Route::post('posts/{post:slug}/comments', [PostCommentsController::class, 'store']);
