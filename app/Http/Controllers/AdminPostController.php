@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Validation\Rule;
-use Illuminate\Http\Request;
 
 class AdminPostController extends Controller
 {
@@ -22,19 +21,11 @@ class AdminPostController extends Controller
 
     public function store()
     {
-        $attributes = request()->validate([
-            'title' => 'required',
-           // 'thumbnail' => 'required|image',
-            'slug' => ['required', Rule::unique('posts', 'slug')],
-            'excerpt' => 'required',
-            'body' => 'required',
-            'category_id' => ['required', Rule::exists('categories', 'id')]
-        ]);
-
-        $attributes['user_id'] = auth()->id();
-        //$attributes['thumbnail'] = request()->file('thumbnail')->store('thumbnails');
-
-        Post::create($attributes);
+        //request()->user()->posts()->create();
+        Post::create(array_merge($this->validatePost(), [
+            'user_id' => request()->user()->id,
+            //'thumbnail' => request()->file('thumbnail')->store('thumbnails')
+        ]));
 
         return redirect('/')->with('success', 'Post Created!');;
     }
@@ -46,16 +37,9 @@ class AdminPostController extends Controller
 
     public function update(Post $post)
     {
-        $attributes = request()->validate([
-            'title' => 'required',
-            //'thumbnail' => 'image',
-            'slug' => ['required', Rule::unique('posts', 'slug')->ignore($post->id)],
-            'excerpt' => 'required',
-            'body' => 'required',
-            'category_id' => ['required', Rule::exists('categories', 'id')]
-        ]);
+        $attributes = $this->validatePost($post);
 
-        /*if (isset($attributes['thumbnail'])) {
+        /*if ($attributes['thumbnail'] ?? false) { //php 8 way
             $attributes['thumbnail'] = request()->file('thumbnail')->store('thumbnails');
         }*/
 
@@ -69,5 +53,20 @@ class AdminPostController extends Controller
         $post->delete();
 
         return back()->with('success', 'Post Deleted!');
+    }
+
+    protected function validatePost(?Post $post = null): array //?Post $post = null mean null can be pass to this method
+    {
+        $post ??= new Post(); // if we have post we're gonna use it, otherwise let set default to new instance 
+
+        return request()->validate([
+            'title' => 'required',
+            //'thumbnail' => $post->exists ? ['image'] : ['required', 'image'],
+            'slug' => ['required', Rule::unique('posts', 'slug')->ignore($post)],
+            'excerpt' => 'required',
+            'body' => 'required',
+            'category_id' => ['required', Rule::exists('categories', 'id')],
+            //'published_at' => 'required'
+        ]);
     }
 }
